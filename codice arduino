@@ -60,9 +60,11 @@ void loop() {
   yaw = mpu.getAngleZ();
   if (yaw < 0)
     yaw += 360;
-  else if (yaw > 359)
-    yaw -= 360;
-
+  else if (yaw > 359){
+    //yaw -= 360;
+  int z = yaw / 360;
+  yaw = yaw -(360 * z);
+  }
 	Serial.println(yaw);
 
 	timer = millis();  
@@ -90,4 +92,3 @@ void draw() {
   dtostrf(yaw, 6, 2, str);
   u8g.drawStr( 30, 62, str);
 }
-
