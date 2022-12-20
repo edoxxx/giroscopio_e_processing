@@ -1,0 +1,93 @@
+/* Get tilt angles on X and Y, and rotation angle on Z
+ * Angles are given in degrees
+ * 
+ * License: MIT
+ */
+
+#include "Wire.h"
+#include <MPU6050_light.h>
+#include "U8glib.h"
+
+MPU6050 mpu(Wire);
+U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NONE|U8G_I2C_OPT_DEV_0);  // I2C / TWI 
+
+unsigned long timer = 0;
+// Pitch, Roll and Yaw values
+int pitch = 0;
+int roll = 0;
+int yaw = 0;
+
+void setup() {
+  Serial.begin(115600);
+  u8g.begin();
+  Wire.begin();
+  
+  
+  byte status = mpu.begin();
+  Serial.print(F("MPU6050 status: "));
+  Serial.println(status);
+  while(status!=0){ } // stop everything if could not connect to MPU6050
+  
+  Serial.println(F("Calculating offsets, do not move MPU6050"));
+  u8g.setFont(u8g_font_unifont);
+  u8g.drawStr( 0, 22, "CALIBRAZIONE");
+  delay(1000);
+  // mpu.upsideDownMounting = true; // uncomment this line if the MPU6050 is mounted upside-down
+  mpu.calcOffsets(); // gyro and accelero
+  Serial.println("Done!\n");
+  u8g.setFont(u8g_font_unifont);
+  u8g.drawStr( 0, 22, "FATTO!");
+  delay(1000);
+}
+
+void loop() {
+  mpu.update();
+  
+  if((millis()-timer)>5){ // print data every 10ms
+	//Serial.print("X : ");
+	roll = mpu.getAngleX();
+  Serial.print(roll);
+
+  Serial.print("/");
+	//Serial.print("\tY : ");
+
+	pitch =mpu.getAngleY();
+  Serial.print(pitch);
+
+  Serial.print("/");
+
+	//Serial.print("\tZ : ");
+  yaw = mpu.getAngleZ();
+  if (yaw < 0)
+    yaw += 360;
+  else if (yaw > 359)
+    yaw -= 360;
+
+	Serial.println(yaw);
+
+	timer = millis();  
+  
+  u8g.firstPage();
+  do {
+    draw();
+  } while (u8g.nextPage());  
+  delay(5);
+  }
+}
+char str[8];
+
+void draw() {
+  u8g.setFont(u8g_font_unifont);
+  u8g.drawStr( 0, 22, "Y:");
+  dtostrf(pitch, 6, 2, str);
+  u8g.drawStr( 30, 22, str);
+  
+  u8g.drawStr( 0, 42, "x:");
+  dtostrf(roll, 6, 2, str);
+  u8g.drawStr( 30, 42, str);
+  
+  u8g.drawStr( 0, 62, "Z:");
+  dtostrf(yaw, 6, 2, str);
+  u8g.drawStr( 30, 62, str);
+}
+
